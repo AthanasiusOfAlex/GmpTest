@@ -11,4 +11,5 @@ import Gmp
 
 print("Hello, World!")
 
-let g: mpz_t
+var x, y, result: mpz_t;
+

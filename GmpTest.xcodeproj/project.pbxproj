@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		520373AB1EB9C9040040E00A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520373AA1EB9C9040040E00A /* main.swift */; };
+		520373B31EB9CA410040E00A /* libgmp.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 520373B21EB9CA410040E00A /* libgmp.10.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,8 @@
 /* Begin PBXFileReference section */
 		520373A71EB9C9040040E00A /* GmpTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GmpTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		520373AA1EB9C9040040E00A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		520373B21EB9CA410040E00A /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = ../../../../../../usr/local/Cellar/gmp/6.1.2/lib/libgmp.10.dylib; sourceTree = "<group>"; };
+		525DFAFE1EB9CF23003489DB /* gmp */ = {isa = PBXFileReference; lastKnownFileType = folder; path = gmp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				520373B31EB9CA410040E00A /* libgmp.10.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,8 +45,10 @@
 		5203739E1EB9C9040040E00A = {
 			isa = PBXGroup;
 			children = (
+				525DFAFE1EB9CF23003489DB /* gmp */,
 				520373A91EB9C9040040E00A /* GmpTest */,
 				520373A81EB9C9040040E00A /* Products */,
+				520373B11EB9CA410040E00A /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +66,14 @@
 				520373AA1EB9C9040040E00A /* main.swift */,
 			);
 			path = GmpTest;
+			sourceTree = "<group>";
+		};
+		520373B11EB9CA410040E00A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				520373B21EB9CA410040E00A /* libgmp.10.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -220,7 +234,12 @@
 		520373AF1EB9C9040040E00A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/gmp/6.1.2/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/gmp";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -228,7 +247,12 @@
 		520373B01EB9C9040040E00A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/gmp/6.1.2/lib,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/gmp";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
@@ -252,6 +276,7 @@
 				520373B01EB9C9040040E00A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

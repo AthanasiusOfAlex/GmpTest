@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import Gmp
 
 print("Hello, World!")
 
+let g: mpz_t

@@ -1,0 +1,4 @@
+module Gmp [system] {
+    header "/usr/local/include/gmp.h"
+    export *
+}

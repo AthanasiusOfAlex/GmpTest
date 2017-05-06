@@ -116,19 +116,23 @@ extension SignedMaxable {
     
 }
 
-//extension Maxable {
-//    
-//    init(_ bigInt: BigInt) {
-//        
-//        //var numberToGet = bigInt.internalStruct
-//        
-//        if bigInt > BigInt(Maxable.max) {}
-//        
-//        let string = String(bigInt)
-//        
-//        
-//    }
-//}
+extension UnsignedMaxable {
+    
+    init(_ bigInt: BigInt) {
+        
+        
+        guard bigInt < BigInt(Self.max) else {
+            
+            fatalError("Tried to convert BigInt greater than maximum allowed for \(Mirror(reflecting: Self.max).subjectType)")
+            
+        }
+        
+        let string = String(bigInt)
+        self.init(string, radix: 10)!
+        
+    }
+    
+}
 
 
 protocol GenericInteger: Integer {

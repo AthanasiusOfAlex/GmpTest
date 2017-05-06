@@ -71,43 +71,48 @@ extension IntMax {
 }
 
 
-protocol SignedMaxable: SignedInteger {
-    
+protocol Maxminable {
+
     static var max: Self { get }
+    static var min: Self { get }
     init?(_ value: String, radix: Int)
 
 }
 
-protocol UnsignedMaxable: UnsignedInteger {
-    
-    static var max: Self { get }
-    init?(_ value: String, radix: Int)
+protocol SignedMaxminable: Maxminable, SignedInteger { }
 
-}
+extension Int: SignedMaxminable {}
+extension Int64: SignedMaxminable {}
+extension Int32: SignedMaxminable {}
+extension Int16: SignedMaxminable {}
+extension Int8: SignedMaxminable {}
 
-extension Int: SignedMaxable {}
-extension Int64: SignedMaxable {}
-extension Int32: SignedMaxable {}
-extension Int16: SignedMaxable {}
-extension Int8: SignedMaxable {}
+protocol UnsignedMaxminable: Maxminable, UnsignedInteger { }
 
-extension UInt: UnsignedMaxable {}
-extension UInt64: UnsignedMaxable {}
-extension UInt32: UnsignedMaxable {}
-extension UInt16: UnsignedMaxable {}
-extension UInt8: UnsignedMaxable {}
+extension UInt: UnsignedMaxminable {}
+extension UInt64: UnsignedMaxminable {}
+extension UInt32: UnsignedMaxminable {}
+extension UInt16: UnsignedMaxminable {}
+extension UInt8: UnsignedMaxminable {}
 
 
-extension SignedMaxable {
+extension SignedMaxminable {
     
     init(_ bigInt: BigInt) {
         
         
-        guard bigInt < BigInt(Self.max) else {
+        guard bigInt <= BigInt(Self.max) else {
             
             fatalError("Tried to convert BigInt greater than maximum allowed for \(Mirror(reflecting: Self.max).subjectType)")
             
         }
+        
+        guard bigInt >= BigInt(Self.min) else {
+            
+            fatalError("Tried to convert BigInt less than minimum allowed for \(Mirror(reflecting: Self.max).subjectType)")
+            
+        }
+
         
         let string = String(bigInt)
         self.init(string, radix: 10)!
@@ -116,14 +121,20 @@ extension SignedMaxable {
     
 }
 
-extension UnsignedMaxable {
+extension UnsignedMaxminable {
     
     init(_ bigInt: BigInt) {
         
         
-        guard bigInt < BigInt(Self.max) else {
+        guard bigInt <= BigInt(Self.max) else {
             
             fatalError("Tried to convert BigInt greater than maximum allowed for \(Mirror(reflecting: Self.max).subjectType)")
+            
+        }
+        
+        guard bigInt >= BigInt(Self.min) else {
+            
+            fatalError("Tried to convert BigInt less than minimum allowed for \(Mirror(reflecting: Self.max).subjectType)")
             
         }
         

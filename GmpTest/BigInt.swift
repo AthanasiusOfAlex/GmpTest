@@ -199,6 +199,9 @@ final class BigInt {
         __gmpz_clear(&internalStruct)
         
     }
+}
+
+extension BigInt: IntegerArithmetic {
     
     static func addWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
@@ -260,6 +263,16 @@ final class BigInt {
         
     }
     
+    func toIntMax() -> IntMax {
+        
+        return IntMax(self)
+        
+    }
+
+}
+
+extension BigInt: Equatable {
+
     fileprivate static func compare(_ lhs: BigInt, to rhs: BigInt) -> Int32 {
         
         var lhsStruct = lhs.internalStruct
@@ -282,7 +295,10 @@ final class BigInt {
         }
         
     }
-    
+}
+
+extension BigInt: Comparable {
+        
     static func <(lhs: BigInt, rhs: BigInt) -> Bool {
         
         if compare(lhs, to: rhs) < 0 {
@@ -296,12 +312,10 @@ final class BigInt {
         }
         
     }
+    
+}
 
-    func toIntMax() -> IntMax {
-        
-        return IntMax(self)
-        
-    }
+extension BigInt: CustomStringConvertible {
     
     var description: String {
         
@@ -309,7 +323,10 @@ final class BigInt {
         
     }
 
+}
 
+extension BigInt: ExpressibleByIntegerLiteral {
+    
     typealias IntegerLiteralType = Int
     
     convenience init(integerLiteral: IntegerLiteralType) {
@@ -317,13 +334,8 @@ final class BigInt {
         self.init(integerLiteral)
         
     }
-    
-
 
 }
-
-extension BigInt: Equatable, Comparable, IntegerArithmetic, CustomStringConvertible, ExpressibleByIntegerLiteral {}
-
 
 extension BigInt: Strideable {
     

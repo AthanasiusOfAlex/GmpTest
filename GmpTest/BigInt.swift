@@ -426,3 +426,31 @@ extension BigInt : BitwiseOperations {
 
 }
 
+extension BigInt: ExpressibleByStringLiteral {
+    
+    typealias StringLiteralType = String
+    
+    convenience init(stringLiteral value: StringLiteralType) {
+        
+        self.init(value)
+        
+    }
+
+    typealias ExtendedGraphemeClusterLiteralType = Character
+    
+    convenience init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
+        
+        self.init(String(value))
+        
+    }
+    
+    typealias UnicodeScalarLiteralType = UnicodeScalar
+    
+    convenience init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
+        
+        self.init(String(value))
+        
+    }
+
+}
+

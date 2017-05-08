@@ -26,4 +26,33 @@
 
 import Foundation
 
+let n: BigInt = "10000000000001"
 
+extension BigInt {
+    
+    func toThePowerOf(_ n: BigInt) -> BigInt {
+        
+        guard self != 0 || n != 0 else { fatalError("Attempt to raise 0 to the 0th power") }
+        guard n >= 0 else { fatalError("This function only takes nonnegative powers") }
+        guard n > 0 else { return 1 }
+        guard n > 1 else { return self }
+        
+        var result: BigInt = self
+
+        for _ in 2...n {
+            
+            result *= self
+
+        }
+        
+        return result
+        
+    }
+    
+}
+
+for i in BigInt(1)...BigInt(1000) {
+    
+    print("\(i) to the power of \(i) is \(i.toThePowerOf(i))")
+    
+}

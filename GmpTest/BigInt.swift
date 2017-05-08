@@ -3,7 +3,25 @@
 //  GmpTest
 //
 //  Created by Louis Melahn on 5/3/17.
-//  Copyright © 2017 Louis Melahn. All rights reserved.
+//  Copyright © 2017 Louis Melahn
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+//  IN THE SOFTWARE.
 //
 
 import Foundation
@@ -298,7 +316,7 @@ extension BigInt: Equatable {
 }
 
 extension BigInt: Comparable {
-        
+    
     static func <(lhs: BigInt, rhs: BigInt) -> Bool {
         
         if compare(lhs, to: rhs) < 0 {
@@ -366,27 +384,45 @@ extension BigInt: Hashable {
     
 }
 
-//extension BigInt: BitwiseOperations {
-//    /// Returns the intersection of bits set in the two arguments.
-//    ///
-//    /// The bitwise AND operator (`&`) returns a value that has each bit set to
-//    /// `1` where *both* of its arguments had that bit set to `1`. This is
-//    /// equivalent to the intersection of two sets. For example:
-//    ///
-//    ///     let x: UInt8 = 5        // 0b00000101
-//    ///     let y: UInt8 = 14       // 0b00001110
-//    ///     let z = x & y           // 0b00000100
-//    ///
-//    /// Performing a bitwise AND operation with a value and `allZeros` always
-//    /// returns `allZeros`.
-//    ///
-//    ///     print(x & .allZeros)    // 0b00000000
-//    ///     // Prints "0"
-//    ///
-//    /// - Complexity: O(1).
-//    static func &(lhs: BigInt, rhs: BigInt) -> Self {
-//        <#code#>
-//    }
-//
-//
-//}
+extension BigInt : BitwiseOperations {
+
+    static func &(lhs: BigInt, rhs: BigInt) -> BigInt {
+        
+        let result = BigInt()
+        __gmpz_and(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func |(lhs: BigInt, rhs: BigInt) -> BigInt {
+        
+        let result = BigInt()
+        __gmpz_ior(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func ^(lhs: BigInt, rhs: BigInt) -> BigInt {
+        
+        let result = BigInt()
+        __gmpz_xor(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static prefix func ~(x: BigInt) -> BigInt {
+        
+        let result = BigInt()
+        __gmpz_com(&result.internalStruct, &x.internalStruct)
+        return result
+        
+    }
+    
+    static var allZeros: BigInt {
+        
+        return BigInt()
+        
+    }
+
+}
+

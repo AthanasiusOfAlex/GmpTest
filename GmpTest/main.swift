@@ -24,9 +24,3 @@
 //  IN THE SOFTWARE.
 //
 
-
-for i in 1...100 {
-    
-    BigIntStruct(i).toIntMax()
-    
-}

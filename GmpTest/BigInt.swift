@@ -163,22 +163,19 @@ extension UnsignedMaxminable {
     
 }
 
-
-protocol GenericInteger: Integer {
-    init(_ value: BigInt)
-}
-
-
-
 final class BigInt {
     
     /// This is the internal GMP struct that actually holds the number.
-    fileprivate var internalStruct: mpz_t
+    fileprivate var internalStruct = mpz_t()
+    
+    private var isAlreadyInitialized = false
     
     init() {
         
-        internalStruct = mpz_t()
+        guard isAlreadyInitialized == false else { return }
+
         __gmpz_init(&internalStruct)
+        isAlreadyInitialized = true
         
     }
     
@@ -186,9 +183,18 @@ final class BigInt {
         
         let buffer = string.cString(using: .ascii)!
         
-        internalStruct = mpz_t()
-        __gmpz_init_set_str(&internalStruct, buffer, Int32(base))
+        if isAlreadyInitialized {
+            
+            __gmpz_set_str(&internalStruct, buffer, Int32(base))
+
+        } else {
         
+            __gmpz_init_set_str(&internalStruct, buffer, Int32(base))
+        
+        }
+        
+        isAlreadyInitialized = true
+
     }
     
     convenience init<T>(_ n: T) where T:SignedInteger {
@@ -245,30 +251,48 @@ extension BigInt: IntegerArithmetic {
         
     }
     
+    static func sign(_ value: BigInt) -> Int {
+        
+        let zero = BigInt()
+        
+        if value == zero {
+            
+            return 0
+        
+        } else if value > zero {
+            
+            return -1
+        
+        } else {
+        
+            return 1
+        
+        }
+        
+    }
+    
     static func divideWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
         let result = BigInt()
-        let zero = BigInt()
         
-        if rhs==zero {
+        if rhs == result { // N.B.: result == 0
             
             return (result, overflow: true)
-            
+        
         } else {
-            
+
             __gmpz_tdiv_q(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
             return (result, overflow: false)
-            
-        }
         
+        }
+    
     }
     
     static func remainderWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
         let result = BigInt()
-        let zero = BigInt()
         
-        if rhs==zero {
+        if rhs==result { // N.B.: result == 0
             
             return (result, overflow: true)
             
@@ -343,17 +367,17 @@ extension BigInt: CustomStringConvertible {
 
 }
 
-extension BigInt: ExpressibleByIntegerLiteral {
-    
-    typealias IntegerLiteralType = Int
-    
-    convenience init(integerLiteral: IntegerLiteralType) {
-        
-        self.init(integerLiteral)
-        
-    }
-
-}
+//extension BigInt: ExpressibleByIntegerLiteral {
+//    
+//    typealias IntegerLiteralType = Int
+//    
+//    convenience init(integerLiteral: IntegerLiteralType) {
+//        
+//        self.init(integerLiteral)
+//        
+//    }
+//
+//}
 
 extension BigInt: Strideable {
     
@@ -426,31 +450,31 @@ extension BigInt : BitwiseOperations {
 
 }
 
-extension BigInt: ExpressibleByStringLiteral {
-    
-    typealias StringLiteralType = String
-    
-    convenience init(stringLiteral value: StringLiteralType) {
-        
-        self.init(value)
-        
-    }
-
-    typealias ExtendedGraphemeClusterLiteralType = Character
-    
-    convenience init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
-        
-        self.init(String(value))
-        
-    }
-    
-    typealias UnicodeScalarLiteralType = UnicodeScalar
-    
-    convenience init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
-        
-        self.init(String(value))
-        
-    }
-
-}
+//extension BigInt: ExpressibleByStringLiteral {
+//    
+//    typealias StringLiteralType = String
+//    
+//    convenience init(stringLiteral value: StringLiteralType) {
+//        
+//        self.init(value)
+//        
+//    }
+//
+//    typealias ExtendedGraphemeClusterLiteralType = Character
+//    
+//    convenience init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
+//        
+//        self.init(String(value))
+//        
+//    }
+//    
+//    typealias UnicodeScalarLiteralType = UnicodeScalar
+//    
+//    convenience init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
+//        
+//        self.init(String(value))
+//        
+//    }
+//
+//}
 

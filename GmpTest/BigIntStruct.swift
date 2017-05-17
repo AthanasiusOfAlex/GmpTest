@@ -1,8 +1,8 @@
 //
-//  main.swift
+//  BigIntStruct.swift
 //  GmpTest
 //
-//  Created by Louis Melahn on 5/3/17.
+//  Created by Louis Melahn on 5/17/17.
 //  Copyright © 2017 Louis Melahn
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,15 +24,35 @@
 //  IN THE SOFTWARE.
 //
 
+import Foundation
+import GMP
 
+private final class BigIntClass {
+    
+    /// This is the internal GMP struct that actually holds the number.
+    fileprivate var internalStruct = mpz_t()
+    
+    init() {
+        
+        __gmpz_init(&internalStruct)
+        
+    }
 
-let h = 6.7
-let i = 0.8
-
-print (h/i)
-print (h.truncatingRemainder(dividingBy: i))
-let g = 5
-
-var bg = BigInt(5)
-
-
+    deinit {
+        __gmpz_clear(&internalStruct)
+    }
+    
+    func set(_ value: String) {
+        
+        
+    }
+    
+    func get(usingBase: Int) -> String {
+        
+        
+        
+        __gmpz_get_str(<#T##UnsafeMutablePointer<Int8>!#>, <#T##Int32#>, <#T##mpz_srcptr!#>)
+        
+    }
+    
+}

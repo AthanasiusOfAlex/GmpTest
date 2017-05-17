@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		520373AB1EB9C9040040E00A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520373AA1EB9C9040040E00A /* main.swift */; };
 		520373B31EB9CA410040E00A /* libgmp.10.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 520373B21EB9CA410040E00A /* libgmp.10.dylib */; };
-		5211C5131ECC389900512FBD /* BigIntStruct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5211C5121ECC389900512FBD /* BigIntStruct.swift */; };
 		52435B611EBC5A8800FDE9AB /* BigInt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52435B601EBC5A8800FDE9AB /* BigInt.swift */; };
 		52A7A2C01EC248A300D85A94 /* BigFloat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A7A2BF1EC248A300D85A94 /* BigFloat.swift */; };
 /* End PBXBuildFile section */
@@ -30,7 +29,6 @@
 		520373A71EB9C9040040E00A /* GmpTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GmpTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		520373AA1EB9C9040040E00A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		520373B21EB9CA410040E00A /* libgmp.10.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgmp.10.dylib; path = ../../../../../../usr/local/Cellar/gmp/6.1.2/lib/libgmp.10.dylib; sourceTree = "<group>"; };
-		5211C5121ECC389900512FBD /* BigIntStruct.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigIntStruct.swift; sourceTree = "<group>"; };
 		52435B601EBC5A8800FDE9AB /* BigInt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigInt.swift; sourceTree = "<group>"; };
 		525DFAFE1EB9CF23003489DB /* gmp */ = {isa = PBXFileReference; lastKnownFileType = folder; path = gmp; sourceTree = "<group>"; };
 		52A7A2BF1EC248A300D85A94 /* BigFloat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BigFloat.swift; sourceTree = "<group>"; };
@@ -72,7 +70,6 @@
 				520373AA1EB9C9040040E00A /* main.swift */,
 				52435B601EBC5A8800FDE9AB /* BigInt.swift */,
 				52A7A2BF1EC248A300D85A94 /* BigFloat.swift */,
-				5211C5121ECC389900512FBD /* BigIntStruct.swift */,
 			);
 			path = GmpTest;
 			sourceTree = "<group>";
@@ -146,7 +143,6 @@
 				52A7A2C01EC248A300D85A94 /* BigFloat.swift in Sources */,
 				52435B611EBC5A8800FDE9AB /* BigInt.swift in Sources */,
 				520373AB1EB9C9040040E00A /* main.swift in Sources */,
-				5211C5131ECC389900512FBD /* BigIntStruct.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

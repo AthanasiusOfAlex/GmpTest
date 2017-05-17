@@ -2,7 +2,7 @@
 //  BigInt.swift
 //  GmpTest
 //
-//  Created by Louis Melahn on 5/3/17.
+//  Created by Louis Melahn on 5/17/17.
 //  Copyright © 2017 Louis Melahn
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a
@@ -27,295 +27,63 @@
 import Foundation
 import GMP
 
-extension String {
 
-    init(_ bigInt: BigInt, usingBase base: Int) {
-
-        var buffer = [CChar]()
-
-        var numberToGet = bigInt.internalStruct
-        __gmpz_get_str(&buffer, Int32(base), &numberToGet)
-
-        self = String(cString: buffer)
-
-    }
-
-    init(_ bigInt: BigInt) {
-
-        self = String(bigInt)
-
-    }
-
-}
-
-extension Int {
-    
-    init(_ bigInt: BigInt) {
-        
-        var numberToGet = bigInt.internalStruct
-        
-        if __gmpz_fits_slong_p(&numberToGet)==0 {
-            
-            fatalError("BigInt is too large to be converted to Int.")
-            
-        } else {
-            
-            self = __gmpz_get_si(&numberToGet)
-            
-        }
-        
-    }
-    
-}
-
-extension IntMax {
-    
-    init(_ bigInt: BigInt) {
-        
-        var numberToGet = bigInt.internalStruct
-        
-        if __gmpz_fits_slong_p(&numberToGet)==0 {
-        
-            fatalError("BigInt is too large to be converted to IntMax.")
-
-        } else {
-        
-            self = IntMax(__gmpz_get_si(&numberToGet))
-        
-        }
-        
-    }
-    
-}
-
-
-private protocol Maxminable {
-
-    static var max: Self { get }
-    static var min: Self { get }
-    init?(_ value: String, radix: Int)
-
-}
-
-private protocol SignedMaxminable: Maxminable, SignedInteger { }
-
-extension Int: SignedMaxminable {}
-extension Int64: SignedMaxminable {}
-extension Int32: SignedMaxminable {}
-extension Int16: SignedMaxminable {}
-extension Int8: SignedMaxminable {}
-
-private protocol UnsignedMaxminable: Maxminable, UnsignedInteger { }
-
-extension UInt: UnsignedMaxminable {}
-extension UInt64: UnsignedMaxminable {}
-extension UInt32: UnsignedMaxminable {}
-extension UInt16: UnsignedMaxminable {}
-extension UInt8: UnsignedMaxminable {}
-
-
-extension SignedMaxminable {
-    
-    init(_ bigInt: BigInt) {
-        
-        
-        guard bigInt <= BigInt(Self.max) else {
-            
-            fatalError("Tried to convert BigInt greater than maximum allowed for \(Mirror(reflecting: Self.max).subjectType)")
-            
-        }
-        
-        guard bigInt >= BigInt(Self.min) else {
-            
-            fatalError("Tried to convert BigInt less than minimum allowed for \(Mirror(reflecting: Self.max).subjectType)")
-            
-        }
-
-        
-        let string = String(bigInt)
-        self.init(string, radix: 10)!
-        
-    }
-    
-}
-
-extension UnsignedMaxminable {
-    
-    init(_ bigInt: BigInt) {
-        
-        
-        guard bigInt <= BigInt(Self.max) else {
-            
-            fatalError("Tried to convert BigInt greater than maximum allowed for \(Mirror(reflecting: Self.max).subjectType)")
-            
-        }
-        
-        guard bigInt >= BigInt(Self.min) else {
-            
-            fatalError("Tried to convert BigInt less than minimum allowed for \(Mirror(reflecting: Self.max).subjectType)")
-            
-        }
-        
-        let string = String(bigInt)
-        self.init(string, radix: 10)!
-        
-    }
-    
-}
-
-final class BigInt {
+fileprivate final class _BigInt {
     
     /// This is the internal GMP struct that actually holds the number.
     fileprivate var internalStruct = mpz_t()
     
-    private var isAlreadyInitialized = false
-    
     init() {
         
-        guard isAlreadyInitialized == false else { return }
-
         __gmpz_init(&internalStruct)
-        isAlreadyInitialized = true
         
     }
     
-    init(_ string: String, usingBase base: Int=10) {
-        
-        let buffer = string.cString(using: .ascii)!
-        
-        if isAlreadyInitialized {
-            
-            __gmpz_set_str(&internalStruct, buffer, Int32(base))
-
-        } else {
-        
-            __gmpz_init_set_str(&internalStruct, buffer, Int32(base))
-        
-        }
-        
-        isAlreadyInitialized = true
-
-    }
-    
-    convenience init<T>(_ n: T) where T:SignedInteger {
-        
-        let string = String(n)
-        self.init(string)
-        
-    }
-    
-    convenience init<T>(_ n: T) where T:UnsignedInteger {
-        
-        let string = String(n)
-        self.init(string)
-        
-    }
-
-    
-    init(_ n: mpz_t) {
-        
-        internalStruct = n
-        
-    }
-        
     deinit {
         
         __gmpz_clear(&internalStruct)
         
     }
-}
-
-extension BigInt: IntegerArithmetic {
     
-    static func addWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+    func set(_ value: String, usingBase base: Int=10) {
         
-        let result = BigInt()
-        __gmpz_add(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return (result, overflow: false)
+        let buffer = value.cString(using: .ascii)!
+        __gmpz_set_str(&internalStruct, buffer, Int32(base))
         
     }
     
-    static func subtractWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+    func getString(usingBase base: Int=10) -> String {
         
-        let result = BigInt()
-        __gmpz_sub(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return (result, overflow: false)
+        var buffer = [CChar]()
         
-    }
-    
-    static func multiplyWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        var internalStructCopy = self.internalStruct
+        __gmpz_get_str(&buffer, Int32(base), &internalStructCopy)
         
-        let result = BigInt()
-        __gmpz_mul(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return (result, overflow: false)
+        return String(cString: buffer)
         
     }
     
-    static func sign(_ value: BigInt) -> Int {
+    func getIntMax() -> IntMax? {
         
-        let zero = BigInt()
+        let max = _BigInt()
+        max.set(String(IntMax.max))
         
-        if value == zero {
-            
-            return 0
+        // Make sure that "self" is less than or equal to the maximum allowed integer.
+        guard _BigInt.compare(self, to: max) <= 0 else { return nil }
         
-        } else if value > zero {
-            
-            return -1
+        let min = _BigInt()
+        min.set(String(IntMax.min))
         
-        } else {
+        // Make sure that "self" is greater than or equal to the minimum allowed integer.
+        guard _BigInt.compare(self, to: min) >= 0 else { return nil }
         
-            return 1
-        
-        }
+        return IntMax(self.getString())
         
     }
     
-    static func divideWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
-        
-        let result = BigInt()
-        
-        if rhs == result { // N.B.: result == 0
-            
-            return (result, overflow: true)
-        
-        } else {
-
-            __gmpz_tdiv_q(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-            return (result, overflow: false)
-        
-        }
-    
-    }
-    
-    static func remainderWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
-        
-        let result = BigInt()
-        
-        if rhs==result { // N.B.: result == 0
-            
-            return (result, overflow: true)
-            
-        } else {
-            
-            __gmpz_tdiv_r(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-            return (result, overflow: false)
-            
-        }
-        
-    }
-    
-    func toIntMax() -> IntMax {
-        
-        return IntMax(self)
-        
-    }
-
-}
-
-extension BigInt: Equatable {
-
-    fileprivate static func compare(_ lhs: BigInt, to rhs: BigInt) -> Int32 {
+    /// Returns 0 if the lhs and rhs are equal,
+    /// negative if lhs < rhs, and positive is lhs > rhs
+    fileprivate static func compare(_ lhs: _BigInt, to rhs: _BigInt) -> Int32 {
         
         var lhsStruct = lhs.internalStruct
         var rhsStruct = rhs.internalStruct
@@ -324,32 +92,189 @@ extension BigInt: Equatable {
         
     }
     
-    static func ==(lhs: BigInt, rhs: BigInt) -> Bool {
+    static func add(_ lhs: _BigInt, _ rhs: _BigInt) -> _BigInt {
         
-        if compare(lhs, to: rhs)==0 {
+        let result = _BigInt()
+        __gmpz_add(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func subtract(_ lhs: _BigInt, _ rhs: _BigInt) -> _BigInt {
+        
+        let result = _BigInt()
+        __gmpz_sub(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func multiply(_ lhs: _BigInt, _ rhs: _BigInt) -> _BigInt {
+        
+        let result = _BigInt()
+        __gmpz_mul(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    
+    
+    static func divide(_ lhs: _BigInt, _ rhs: _BigInt) -> _BigInt? {
+        
+        let result = _BigInt()
+        
+        if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
             
-            return true
+            return nil
             
         } else {
             
-            return false
+            __gmpz_tdiv_q(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+            return result
             
         }
         
     }
-}
-
-extension BigInt: Comparable {
     
-    static func <(lhs: BigInt, rhs: BigInt) -> Bool {
+    static func remainder(_ lhs: _BigInt, _ rhs: _BigInt) -> _BigInt? {
         
-        if compare(lhs, to: rhs) < 0 {
+        let result = _BigInt()
+        
+        if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
             
-            return true
+            return nil
             
         } else {
             
-            return false
+            __gmpz_tdiv_r(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+            return result
+            
+        }
+        
+    }
+    
+}
+
+struct BigInt {
+    
+    /// This is the internal object that handles the actual interaction with GMP
+    fileprivate var bigIntObject: _BigInt // = BigIntClass()
+    
+}
+
+// Initializers
+extension BigInt{
+    
+    init() {
+        
+        bigIntObject = _BigInt()
+        
+    }
+    
+    init(_ value: String) {
+        
+        self.init()
+        bigIntObject.set(value)
+        
+    }
+    
+    init<T>(_ value: T) where T:SignedInteger {
+        
+        self.init()
+        bigIntObject.set(String(value))
+        
+    }
+    
+    init<T>(_ value: T) where T:UnsignedInteger {
+        
+        self.init()
+        bigIntObject.set(String(value))
+        
+    }
+    
+    fileprivate init(_ value: _BigInt) {
+        
+        bigIntObject = value
+        
+    }
+    
+}
+
+extension BigInt: Equatable, Comparable {
+    
+    static func ==(lhs: BigInt, rhs: BigInt) -> Bool {
+        
+        return _BigInt.compare(lhs.bigIntObject, to: rhs.bigIntObject) == 0
+        
+    }
+    
+    static func <(lhs: BigInt, rhs: BigInt) -> Bool {
+        
+        return _BigInt.compare(lhs.bigIntObject, to: rhs.bigIntObject) < 0
+        
+    }
+    
+}
+
+extension BigInt: IntegerArithmetic {
+    
+    func toIntMax() -> IntMax {
+        
+        if let max = self.bigIntObject.getIntMax() {
+            
+            return max
+            
+        } else {
+            
+            fatalError("Tried to return an IntMax greater than the maximum allowed or less then the minimum allowed")
+            
+        }
+        
+    }
+    
+    static func addWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        
+        let result = _BigInt.add(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigInt(result), false)
+        
+    }
+    
+    static func subtractWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        
+        let result = _BigInt.subtract(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigInt(result), false)
+        
+    }
+    
+    static func multiplyWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        
+        let result = _BigInt.multiply(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigInt(result), false)
+        
+    }
+    
+    static func divideWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        
+        if let result = _BigInt.divide(lhs.bigIntObject, rhs.bigIntObject) {
+            
+            return (BigInt(result), false)
+            
+        } else {
+            
+            return(BigInt(), true)
+            
+        }
+        
+    }
+    
+    static func remainderWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
+        
+        if let result = _BigInt.remainder(lhs.bigIntObject, rhs.bigIntObject) {
+            
+            return (BigInt(result), false)
+            
+        } else {
+            
+            return(BigInt(), true)
             
         }
         
@@ -361,10 +286,20 @@ extension BigInt: CustomStringConvertible {
     
     var description: String {
         
-        return String(self, usingBase: 10)
+        return self.bigIntObject.getString()
         
     }
+    
+}
 
+extension String {
+    
+    init(_ value: BigInt, usingBase base: Int=10) {
+        
+        self = value.bigIntObject.getString(usingBase: base)
+        
+    }
+    
 }
 
 //extension BigInt: ExpressibleByIntegerLiteral {
@@ -378,78 +313,78 @@ extension BigInt: CustomStringConvertible {
 //    }
 //
 //}
-
-extension BigInt: Strideable {
-    
-    typealias Stride = IntMax
-    
-    func distance(to other: BigInt) -> Stride {
-        
-        return (other - self).toIntMax()
-        
-    }
-    
-    func advanced(by n: Stride) -> BigInt {
-        
-        return BigInt(n) + self
-        
-    }
-    
-}
-
-extension BigInt: Hashable {
-    
-    var hashValue: Int {
-        
-        let string = String(self)
-        return string.hashValue
-        
-    }
-    
-}
-
-extension BigInt : BitwiseOperations {
-
-    static func &(lhs: BigInt, rhs: BigInt) -> BigInt {
-        
-        let result = BigInt()
-        __gmpz_and(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return result
-        
-    }
-    
-    static func |(lhs: BigInt, rhs: BigInt) -> BigInt {
-        
-        let result = BigInt()
-        __gmpz_ior(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return result
-        
-    }
-    
-    static func ^(lhs: BigInt, rhs: BigInt) -> BigInt {
-        
-        let result = BigInt()
-        __gmpz_xor(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
-        return result
-        
-    }
-    
-    static prefix func ~(x: BigInt) -> BigInt {
-        
-        let result = BigInt()
-        __gmpz_com(&result.internalStruct, &x.internalStruct)
-        return result
-        
-    }
-    
-    static var allZeros: BigInt {
-        
-        return BigInt()
-        
-    }
-
-}
-
+//
+//extension BigInt: Strideable {
+//    
+//    typealias Stride = IntMax
+//    
+//    func distance(to other: BigInt) -> Stride {
+//        
+//        return (other - self).toIntMax()
+//        
+//    }
+//    
+//    func advanced(by n: Stride) -> BigInt {
+//        
+//        return BigInt(n) + self
+//        
+//    }
+//    
+//}
+//
+//extension BigInt: Hashable {
+//    
+//    var hashValue: Int {
+//        
+//        let string = String(self)
+//        return string.hashValue
+//        
+//    }
+//    
+//}
+//
+//extension BigInt : BitwiseOperations {
+//
+//    static func &(lhs: BigInt, rhs: BigInt) -> BigInt {
+//        
+//        let result = BigInt()
+//        __gmpz_and(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+//        return result
+//        
+//    }
+//    
+//    static func |(lhs: BigInt, rhs: BigInt) -> BigInt {
+//        
+//        let result = BigInt()
+//        __gmpz_ior(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+//        return result
+//        
+//    }
+//    
+//    static func ^(lhs: BigInt, rhs: BigInt) -> BigInt {
+//        
+//        let result = BigInt()
+//        __gmpz_xor(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+//        return result
+//        
+//    }
+//    
+//    static prefix func ~(x: BigInt) -> BigInt {
+//        
+//        let result = BigInt()
+//        __gmpz_com(&result.internalStruct, &x.internalStruct)
+//        return result
+//        
+//    }
+//    
+//    static var allZeros: BigInt {
+//        
+//        return BigInt()
+//        
+//    }
+//
+//}
+//
 //extension BigInt: ExpressibleByStringLiteral {
 //    
 //    typealias StringLiteralType = String

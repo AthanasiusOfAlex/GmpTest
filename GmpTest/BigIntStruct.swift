@@ -27,7 +27,8 @@
 import Foundation
 import GMP
 
-private final class BigIntClass {
+
+fileprivate final class BigIntClass {
     
     /// This is the internal GMP struct that actually holds the number.
     fileprivate var internalStruct = mpz_t()
@@ -39,19 +40,263 @@ private final class BigIntClass {
     }
 
     deinit {
+        
         __gmpz_clear(&internalStruct)
+
     }
     
-    func set(_ value: String) {
+    func set(_ value: String, usingBase base: Int=10) {
         
+        let buffer = value.cString(using: .ascii)!
+        __gmpz_set_str(&internalStruct, buffer, Int32(base))
         
     }
     
-    func get(usingBase: Int) -> String {
+    func getString(usingBase base: Int=10) -> String {
         
+        var buffer = [CChar]()
         
+        var internalStructCopy = self.internalStruct
+        __gmpz_get_str(&buffer, Int32(base), &internalStructCopy)
         
-        __gmpz_get_str(<#T##UnsafeMutablePointer<Int8>!#>, <#T##Int32#>, <#T##mpz_srcptr!#>)
+        return String(cString: buffer)
+
+    }
+    
+    func getIntMax() -> IntMax? {
+        
+        let max = BigIntClass()
+        max.set(String(IntMax.max))
+        
+        // Make sure that "self" is less than or equal to the maximum allowed integer.
+        guard BigIntClass.compare(self, to: max) <= 0 else { return nil }
+        
+        let min = BigIntClass()
+        min.set(String(IntMax.min))
+
+        // Make sure that "self" is greater than or equal to the minimum allowed integer.
+        guard BigIntClass.compare(self, to: min) >= 0 else { return nil }
+        
+        return IntMax(self.getString())
+        
+    }
+    
+    /// Returns 0 if the lhs and rhs are equal,
+    /// negative if lhs < rhs, and positive is lhs > rhs
+    fileprivate static func compare(_ lhs: BigIntClass, to rhs: BigIntClass) -> Int32 {
+        
+        var lhsStruct = lhs.internalStruct
+        var rhsStruct = rhs.internalStruct
+        
+        return __gmpz_cmp(&lhsStruct, &rhsStruct)
+        
+    }
+    
+    static func add(_ lhs: BigIntClass, _ rhs: BigIntClass) -> BigIntClass {
+        
+        let result = BigIntClass()
+        __gmpz_add(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func subtract(_ lhs: BigIntClass, _ rhs: BigIntClass) -> BigIntClass {
+        
+        let result = BigIntClass()
+        __gmpz_sub(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func multiply(_ lhs: BigIntClass, _ rhs: BigIntClass) -> BigIntClass {
+        
+        let result = BigIntClass()
+        __gmpz_mul(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    
+    
+    static func divide(_ lhs: BigIntClass, _ rhs: BigIntClass) -> BigIntClass? {
+        
+        let result = BigIntClass()
+        
+        if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
+            
+            return nil
+            
+        } else {
+            
+            __gmpz_tdiv_q(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+            return result
+            
+        }
+        
+    }
+    
+    static func remainder(_ lhs: BigIntClass, _ rhs: BigIntClass) -> BigIntClass? {
+        
+        let result = BigIntClass()
+        
+        if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
+            
+            return nil
+            
+        } else {
+            
+            __gmpz_tdiv_r(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+            return result
+            
+        }
+        
+    }
+
+}
+
+struct BigIntStruct {
+    
+    /// This is the internal object that handles the actual interaction with GMP
+    fileprivate var bigIntObject: BigIntClass // = BigIntClass()
+
+}
+
+// Initializers
+extension BigIntStruct{
+
+    init() {
+        
+        bigIntObject = BigIntClass()
+        
+    }
+    
+    init(_ value: String) {
+    
+        self.init()
+        bigIntObject.set(value)
+        
+    }
+    
+    init<T>(_ value: T) where T:SignedInteger {
+        
+        self.init()
+        bigIntObject.set(String(value))
+
+    }
+    
+    init<T>(_ value: T) where T:UnsignedInteger {
+        
+        self.init()
+        bigIntObject.set(String(value))
+        
+    }
+    
+    fileprivate init(_ value: BigIntClass) {
+        
+        bigIntObject = value
+        
+    }
+    
+}
+
+extension BigIntStruct: Equatable, Comparable {
+
+    static func ==(lhs: BigIntStruct, rhs: BigIntStruct) -> Bool {
+        
+        return BigIntClass.compare(lhs.bigIntObject, to: rhs.bigIntObject) == 0
+    
+    }
+    
+    static func <(lhs: BigIntStruct, rhs: BigIntStruct) -> Bool {
+        
+        return BigIntClass.compare(lhs.bigIntObject, to: rhs.bigIntObject) < 0
+        
+    }
+
+}
+
+extension BigIntStruct: IntegerArithmetic {
+
+    func toIntMax() -> IntMax {
+        
+        if let max = self.bigIntObject.getIntMax() {
+            
+            return max
+            
+        } else {
+            
+            fatalError("Tried to return an IntMax greater than the maximum allowed or less then the minimum allowed")
+            
+        }
+        
+    }
+    
+    static func addWithOverflow(_ lhs: BigIntStruct, _ rhs: BigIntStruct) -> (BigIntStruct, overflow: Bool) {
+        
+        let result = BigIntClass.add(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigIntStruct(result), false)
+        
+    }
+    
+    static func subtractWithOverflow(_ lhs: BigIntStruct, _ rhs: BigIntStruct) -> (BigIntStruct, overflow: Bool) {
+        
+        let result = BigIntClass.subtract(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigIntStruct(result), false)
+        
+    }
+
+    static func multiplyWithOverflow(_ lhs: BigIntStruct, _ rhs: BigIntStruct) -> (BigIntStruct, overflow: Bool) {
+        
+        let result = BigIntClass.multiply(lhs.bigIntObject, rhs.bigIntObject)
+        return (BigIntStruct(result), false)
+        
+    }
+    
+    static func divideWithOverflow(_ lhs: BigIntStruct, _ rhs: BigIntStruct) -> (BigIntStruct, overflow: Bool) {
+        
+        if let result = BigIntClass.divide(lhs.bigIntObject, rhs.bigIntObject) {
+            
+            return (BigIntStruct(result), false)
+
+        } else {
+            
+            return(BigIntStruct(), true)
+
+        }
+        
+    }
+    
+    static func remainderWithOverflow(_ lhs: BigIntStruct, _ rhs: BigIntStruct) -> (BigIntStruct, overflow: Bool) {
+        
+        if let result = BigIntClass.remainder(lhs.bigIntObject, rhs.bigIntObject) {
+            
+            return (BigIntStruct(result), false)
+            
+        } else {
+            
+            return(BigIntStruct(), true)
+            
+        }
+        
+    }
+
+}
+
+extension BigIntStruct: CustomStringConvertible {
+
+    var description: String {
+        
+        return self.bigIntObject.getString()
+        
+    }
+    
+}
+
+extension String {
+    
+    init(_ value: BigIntStruct, usingBase base: Int=10) {
+        
+        self = value.bigIntObject.getString(usingBase: base)
         
     }
     

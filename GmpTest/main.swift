@@ -25,14 +25,8 @@
 //
 
 
-
-let h = 6.7
-let i = 0.8
-
-print (h/i)
-print (h.truncatingRemainder(dividingBy: i))
-let g = 5
-
-var bg = BigInt(5)
-
-
+for i in 1...100 {
+    
+    BigIntStruct(i).toIntMax()
+    
+}

@@ -89,7 +89,7 @@ extension IntMax {
 }
 
 
-protocol Maxminable {
+private protocol Maxminable {
 
     static var max: Self { get }
     static var min: Self { get }
@@ -97,7 +97,7 @@ protocol Maxminable {
 
 }
 
-protocol SignedMaxminable: Maxminable, SignedInteger { }
+private protocol SignedMaxminable: Maxminable, SignedInteger { }
 
 extension Int: SignedMaxminable {}
 extension Int64: SignedMaxminable {}
@@ -105,7 +105,7 @@ extension Int32: SignedMaxminable {}
 extension Int16: SignedMaxminable {}
 extension Int8: SignedMaxminable {}
 
-protocol UnsignedMaxminable: Maxminable, UnsignedInteger { }
+private protocol UnsignedMaxminable: Maxminable, UnsignedInteger { }
 
 extension UInt: UnsignedMaxminable {}
 extension UInt64: UnsignedMaxminable {}

@@ -54,10 +54,9 @@ fileprivate final class _BigInt {
     
     func getString(usingBase base: Int=10) -> String {
         
-        var buffer = [CChar]()
         
         var internalStructCopy = self.internalStruct
-        __gmpz_get_str(&buffer, Int32(base), &internalStructCopy)
+        let buffer = __gmpz_get_str(nil, Int32(base), &internalStructCopy)!
         
         return String(cString: buffer)
         
@@ -157,7 +156,7 @@ fileprivate final class _BigInt {
 struct BigInt {
     
     /// This is the internal object that handles the actual interaction with GMP
-    fileprivate var bigIntObject: _BigInt // = BigIntClass()
+    fileprivate var internalObject: _BigInt
     
 }
 
@@ -166,34 +165,34 @@ extension BigInt{
     
     init() {
         
-        bigIntObject = _BigInt()
+        internalObject = _BigInt()
         
     }
     
     init(_ value: String) {
         
         self.init()
-        bigIntObject.set(value)
+        internalObject.set(value)
         
     }
     
     init<T>(_ value: T) where T:SignedInteger {
         
         self.init()
-        bigIntObject.set(String(value))
+        internalObject.set(String(value))
         
     }
     
     init<T>(_ value: T) where T:UnsignedInteger {
         
         self.init()
-        bigIntObject.set(String(value))
+        internalObject.set(String(value))
         
     }
     
     fileprivate init(_ value: _BigInt) {
         
-        bigIntObject = value
+        internalObject = value
         
     }
     
@@ -203,13 +202,13 @@ extension BigInt: Equatable, Comparable {
     
     static func ==(lhs: BigInt, rhs: BigInt) -> Bool {
         
-        return _BigInt.compare(lhs.bigIntObject, to: rhs.bigIntObject) == 0
+        return _BigInt.compare(lhs.internalObject, to: rhs.internalObject) == 0
         
     }
     
     static func <(lhs: BigInt, rhs: BigInt) -> Bool {
         
-        return _BigInt.compare(lhs.bigIntObject, to: rhs.bigIntObject) < 0
+        return _BigInt.compare(lhs.internalObject, to: rhs.internalObject) < 0
         
     }
     
@@ -219,7 +218,7 @@ extension BigInt: IntegerArithmetic {
     
     func toIntMax() -> IntMax {
         
-        if let max = self.bigIntObject.getIntMax() {
+        if let max = self.internalObject.getIntMax() {
             
             return max
             
@@ -233,28 +232,28 @@ extension BigInt: IntegerArithmetic {
     
     static func addWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
-        let result = _BigInt.add(lhs.bigIntObject, rhs.bigIntObject)
+        let result = _BigInt.add(lhs.internalObject, rhs.internalObject)
         return (BigInt(result), false)
         
     }
     
     static func subtractWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
-        let result = _BigInt.subtract(lhs.bigIntObject, rhs.bigIntObject)
+        let result = _BigInt.subtract(lhs.internalObject, rhs.internalObject)
         return (BigInt(result), false)
         
     }
     
     static func multiplyWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
-        let result = _BigInt.multiply(lhs.bigIntObject, rhs.bigIntObject)
+        let result = _BigInt.multiply(lhs.internalObject, rhs.internalObject)
         return (BigInt(result), false)
         
     }
     
     static func divideWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
-        if let result = _BigInt.divide(lhs.bigIntObject, rhs.bigIntObject) {
+        if let result = _BigInt.divide(lhs.internalObject, rhs.internalObject) {
             
             return (BigInt(result), false)
             
@@ -268,7 +267,7 @@ extension BigInt: IntegerArithmetic {
     
     static func remainderWithOverflow(_ lhs: BigInt, _ rhs: BigInt) -> (BigInt, overflow: Bool) {
         
-        if let result = _BigInt.remainder(lhs.bigIntObject, rhs.bigIntObject) {
+        if let result = _BigInt.remainder(lhs.internalObject, rhs.internalObject) {
             
             return (BigInt(result), false)
             
@@ -286,7 +285,7 @@ extension BigInt: CustomStringConvertible {
     
     var description: String {
         
-        return self.bigIntObject.getString()
+        return self.internalObject.getString()
         
     }
     
@@ -296,7 +295,7 @@ extension String {
     
     init(_ value: BigInt, usingBase base: Int=10) {
         
-        self = value.bigIntObject.getString(usingBase: base)
+        self = value.internalObject.getString(usingBase: base)
         
     }
     

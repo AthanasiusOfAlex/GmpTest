@@ -26,6 +26,258 @@
 
 import Foundation
 import GMP
+
+fileprivate final class _BigFloat {
+    
+    /// This is the internal GMP struct that actually holds the number.
+    fileprivate var internalStruct = mpf_t()
+    
+    init() {
+        
+        __gmpf_init(&internalStruct)
+        
+    }
+    
+    deinit {
+        
+        __gmpf_clear(&internalStruct)
+        
+    }
+    
+    func set(_ value: String, usingBase base: Int=10) {
+        
+        let buffer = value.cString(using: .ascii)!
+        __gmpf_set_str(&internalStruct, buffer, Int32(base))
+
+    }
+    
+    func getString(usingBase base: Int=10, returningUpToThisManyDigits n: Int=15) -> String {
+        
+        var position = 0
+        var internalStructCopy = self.internalStruct
+        let significandBuffer = __gmpf_get_str(nil, &position, Int32(base), n, &internalStructCopy)!
+        let significand = String(cString: significandBuffer)
+        
+        return formatFloat(significand: significand, position: position, separator: ".")
+        
+    }
+    
+    private func formatFloat(significand: String, position: Int, separator: String = ".") -> String {
+        
+        var result: String = ""
+        
+        if position<=0 {
+            
+            if significand == "" {
+                
+                result = "0"
+            
+            } else {
+            
+                let frameshift = -position
+                result = "0" + separator + String(repeating: "0", count: frameshift) + significand
+            
+            }
+            
+        } else { // exp > 0
+        
+            let count = significand.characters.count
+            let prefixCount = position
+
+            if prefixCount < count {
+                
+                let suffixCount = count - prefixCount
+                let prefix = String(significand.characters.prefix(prefixCount))
+                let suffix = String(significand.characters.suffix(suffixCount))
+                result = prefix + separator + suffix
+                
+            } else if prefixCount==count {
+                
+                return significand
+                
+            } else { // prefixCount > count
+            
+                let zeros = prefixCount - count
+                result = significand + String(repeating: "0", count: zeros)
+                
+            }
+        }
+        
+        return result
+        
+    }
+    
+    func getDouble() -> Double? {
+        
+        let max = _BigFloat()
+        max.set(String(Double.greatestFiniteMagnitude))
+        
+        // Make sure that "self" is less than or equal to the maximum allowed integer.
+        guard _BigFloat.compare(self, to: max) <= 0 else { return nil }
+        
+        let min = _BigFloat()
+        min.set(String(-1 * Double.greatestFiniteMagnitude))
+        
+        // Make sure that "self" is greater than or equal to the minimum allowed integer.
+        guard _BigFloat.compare(self, to: min) >= 0 else { return nil }
+        
+        return Double(self.getString())
+        
+    }
+    
+    
+    /// Returns 0 if the lhs and rhs are equal,
+    /// negative if lhs < rhs, and positive is lhs > rhs
+    fileprivate static func compare(_ lhs: _BigFloat, to rhs: _BigFloat) -> Int32 {
+        
+        var lhsStruct = lhs.internalStruct
+        var rhsStruct = rhs.internalStruct
+        
+        return __gmpf_cmp(&lhsStruct, &rhsStruct)
+        
+    }
+    
+    static func add(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
+        
+        let result = _BigFloat()
+        __gmpf_add(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func subtract(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
+        
+        let result = _BigFloat()
+        __gmpf_sub(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func multiply(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
+        
+        let result = _BigFloat()
+        __gmpf_mul(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+        return result
+        
+    }
+    
+    static func divide(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat? {
+        
+        let result = _BigFloat()
+        
+        if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
+            
+            return nil
+            
+        } else {
+            
+            __gmpf_div(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
+            return result
+            
+        }
+        
+    }
+    
+}
+
+struct BigFloat {
+    
+    /// This is the internal object that handles the actual interaction with GMP
+    fileprivate var internalObject: _BigFloat
+    
+}
+
+
+// Initializers
+extension BigFloat{
+    
+    init() {
+        
+        internalObject = _BigFloat()
+        
+    }
+    
+    init(_ value: String) {
+        
+        self.init()
+        internalObject.set(value)
+        
+    }
+    
+    init(_ value: Double) {
+        
+        self.init()
+        internalObject.set(String(value))
+        
+    }
+    
+    init<T>(_ value: T) where T:SignedInteger {
+        
+        self.init()
+        internalObject.set(String(value))
+        
+    }
+    
+    init<T>(_ value: T) where T:UnsignedInteger {
+        
+        self.init()
+        internalObject.set(String(value))
+        
+    }
+    
+    fileprivate init(_ value: _BigFloat) {
+        
+        internalObject = value
+        
+    }
+    
+}
+
+extension BigFloat: Equatable, Comparable {
+    
+    static func ==(lhs: BigFloat, rhs: BigFloat) -> Bool {
+        
+        return _BigFloat.compare(lhs.internalObject, to: rhs.internalObject) == 0
+        
+    }
+    
+    static func <(lhs: BigFloat, rhs: BigFloat) -> Bool {
+        
+        return _BigFloat.compare(lhs.internalObject, to: rhs.internalObject) < 0
+        
+    }
+    
+}
+
+extension BigFloat: CustomStringConvertible {
+    
+    var description: String {
+        
+        return self.internalObject.getString()
+        
+    }
+    
+}
+
+
+extension Double {
+    
+    init? (_ value: BigFloat) {
+        
+        if let value = value.internalObject.getDouble() {
+            
+            self = value
+            
+        } else {
+        
+            return nil
+    
+        }
+    
+    }
+    
+}
+
 //
 //extension String {
 //
@@ -54,7 +306,7 @@ import GMP
 //    init(_ bigInt: BigFloat) {
 //        
 //        var numberToGet = bigInt.internalStruct
-//        
+//
 //        if __gmpf_fits_slong_p(&numberToGet)==0 {
 //            
 //            fatalError("BigFloat is too large to be converted to Int.")

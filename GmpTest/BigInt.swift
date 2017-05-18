@@ -36,13 +36,13 @@ fileprivate final class _BigInt {
     init() {
         
         __gmpz_init(&internalStruct)
-        
+ 
     }
     
     deinit {
         
         __gmpz_clear(&internalStruct)
-        
+    
     }
     
     func set(_ value: String, usingBase base: Int=10) {
@@ -302,18 +302,47 @@ extension String {
     
 }
 
-//extension BigInt: ExpressibleByIntegerLiteral {
-//    
-//    typealias IntegerLiteralType = Int
-//    
-//    convenience init(integerLiteral: IntegerLiteralType) {
-//        
-//        self.init(integerLiteral)
-//        
-//    }
-//
-//}
-//
+extension BigInt: ExpressibleByIntegerLiteral {
+    
+    typealias IntegerLiteralType = Int
+    
+    init(integerLiteral: IntegerLiteralType) {
+        
+        self.init(integerLiteral)
+        
+    }
+
+}
+
+extension BigInt: ExpressibleByStringLiteral {
+
+    typealias StringLiteralType = String
+
+    init(stringLiteral value: StringLiteralType) {
+
+        self.init(value)
+
+    }
+
+    typealias ExtendedGraphemeClusterLiteralType = Character
+
+    init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
+
+        self.init(String(value))
+
+    }
+
+    typealias UnicodeScalarLiteralType = UnicodeScalar
+
+    init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
+
+        self.init(String(value))
+
+    }
+
+}
+
+
 //extension BigInt: Strideable {
 //    
 //    typealias Stride = IntMax
@@ -385,31 +414,4 @@ extension String {
 //
 //}
 //
-//extension BigInt: ExpressibleByStringLiteral {
-//    
-//    typealias StringLiteralType = String
-//    
-//    convenience init(stringLiteral value: StringLiteralType) {
-//        
-//        self.init(value)
-//        
-//    }
-//
-//    typealias ExtendedGraphemeClusterLiteralType = Character
-//    
-//    convenience init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
-//        
-//        self.init(String(value))
-//        
-//    }
-//    
-//    typealias UnicodeScalarLiteralType = UnicodeScalar
-//    
-//    convenience init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
-//        
-//        self.init(String(value))
-//        
-//    }
-//
-//}
 

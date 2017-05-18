@@ -24,3 +24,14 @@
 //  IN THE SOFTWARE.
 //
 
+func makeScope() {
+
+    let x: BigInt = "1221312312"
+    let y: BigInt = 23432423432423
+    let z = x+y
+    
+    print(x,y,z)
+    
+}
+
+makeScope()

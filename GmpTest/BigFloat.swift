@@ -46,16 +46,21 @@ fileprivate final class _BigFloat {
     
     func set(_ value: String, usingBase base: Int=10) {
         
-        let buffer = value.cString(using: .ascii)!
-        __gmpf_set_str(&internalStruct, buffer, Int32(base))
+        _ = value.withCString {
+            
+            __gmpf_set_str(&internalStruct, $0, Int32(base))
+            
+        }
 
     }
     
     func getString(usingBase base: Int=10, returningUpToThisManyDigits n: Int=15) -> String {
         
         var position = 0
-        var internalStructCopy = self.internalStruct
-        let significandBuffer = __gmpf_get_str(nil, &position, Int32(base), n, &internalStructCopy)!
+
+        let significandBuffer = __gmpf_get_str(nil, &position, Int32(base), n, &self.internalStruct)!
+        defer { free(significandBuffer) }
+
         let significand = String(cString: significandBuffer)
         
         return formatFloat(significand: significand, position: position, separator: ".")
@@ -66,7 +71,7 @@ fileprivate final class _BigFloat {
         
         var result: String = ""
         
-        if position<=0 {
+        if position <= 0 {
             
             if significand == "" {
                 
@@ -75,6 +80,8 @@ fileprivate final class _BigFloat {
             } else {
             
                 let frameshift = -position
+                assert (frameshift >= 0)
+                
                 result = "0" + separator + String(repeating: "0", count: frameshift) + significand
             
             }
@@ -278,6 +285,8 @@ extension Double {
     
 }
 
+
+
 //
 //extension String {
 //
@@ -339,55 +348,6 @@ extension Double {
 //        
 //    }
 //    
-//}
-//
-//final class BigFloat {
-//    
-//    /// This is the internal GMP struct that actually holds the number.
-//    fileprivate var internalStruct: mpf_t
-//    
-//    init() {
-//        
-//        internalStruct = mpf_t()
-//        __gmpf_init(&internalStruct)
-//        
-//    }
-//    
-//    init(_ string: String, usingBase base: Int=10) {
-//        
-//        let buffer = string.cString(using: .ascii)!
-//        
-//        internalStruct = mpf_t()
-//        __gmpf_init_set_str(&internalStruct, buffer, Int32(base))
-//        
-//    }
-//    
-//    convenience init<T>(_ n: T) where T:SignedInteger {
-//        
-//        let string = String(n)
-//        self.init(string)
-//        
-//    }
-//    
-//    convenience init<T>(_ n: T) where T:UnsignedInteger {
-//        
-//        let string = String(n)
-//        self.init(string)
-//        
-//    }
-//
-//    
-//    init(_ n: mpf_t) {
-//        
-//        internalStruct = n
-//        
-//    }
-//        
-//    deinit {
-//        
-//        __gmpf_clear(&internalStruct)
-//        
-//    }
 //}
 //
 //extension BigFloat {

@@ -47,16 +47,19 @@ fileprivate final class _BigInt {
     
     func set(_ value: String, usingBase base: Int=10) {
         
-        let buffer = value.cString(using: .ascii)!
-        __gmpz_set_str(&internalStruct, buffer, Int32(base))
+        _ = value.withCString {
+            
+            __gmpz_set_str(&internalStruct, $0, Int32(base))
+
+        }
+        
         
     }
     
     func getString(usingBase base: Int=10) -> String {
         
-        
-        var internalStructCopy = self.internalStruct
-        let buffer = __gmpz_get_str(nil, Int32(base), &internalStructCopy)!
+        let buffer = __gmpz_get_str(nil, Int32(base), &self.internalStruct)!
+        defer { free(buffer) }
         
         return String(cString: buffer)
         

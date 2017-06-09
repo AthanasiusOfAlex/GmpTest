@@ -35,7 +35,15 @@ fileprivate final class _BigFloat {
     init() {
         
         __gmpf_init(&internalStruct)
+
+    }
+    
+    init(withPrecision precision: Int) {
         
+        guard precision >= 1 else { fatalError("Precision has to be at least 1") }
+        
+        __gmpf_init2(&internalStruct, UInt(precision))
+
     }
     
     deinit {
@@ -48,10 +56,16 @@ fileprivate final class _BigFloat {
         
         _ = value.withCString {
             
-            __gmpf_set_str(&internalStruct, $0, Int32(base))
+            __gmpf_set_str(&self.internalStruct, $0, Int32(base))
             
         }
 
+    }
+    
+    func set(_ value: Double) {
+    
+        __gmpf_set_d(&self.internalStruct, value)
+    
     }
     
     func getString(usingBase base: Int=10, returningUpToThisManyDigits n: Int=15) -> String {
@@ -132,6 +146,13 @@ fileprivate final class _BigFloat {
         
     }
     
+    func getPrecision() -> Int {
+     
+        let precision = __gmpf_get_prec(&self.internalStruct)
+        return Int(precision)
+        
+    }
+    
     
     /// Returns 0 if the lhs and rhs are equal,
     /// negative if lhs < rhs, and positive is lhs > rhs
@@ -146,7 +167,7 @@ fileprivate final class _BigFloat {
     
     static func add(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
         
-        let result = _BigFloat()
+        let result = _BigFloat(withPrecision: min(lhs.getPrecision(), rhs.getPrecision()))
         __gmpf_add(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
         return result
         
@@ -154,7 +175,7 @@ fileprivate final class _BigFloat {
     
     static func subtract(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
         
-        let result = _BigFloat()
+        let result = _BigFloat(withPrecision: min(lhs.getPrecision(), rhs.getPrecision()))
         __gmpf_sub(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
         return result
         
@@ -162,7 +183,7 @@ fileprivate final class _BigFloat {
     
     static func multiply(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat {
         
-        let result = _BigFloat()
+        let result = _BigFloat(withPrecision: min(lhs.getPrecision(), rhs.getPrecision()))
         __gmpf_mul(&result.internalStruct, &lhs.internalStruct, &rhs.internalStruct)
         return result
         
@@ -170,7 +191,7 @@ fileprivate final class _BigFloat {
     
     static func divide(_ lhs: _BigFloat, _ rhs: _BigFloat) -> _BigFloat? {
         
-        let result = _BigFloat()
+        let result = _BigFloat(withPrecision: min(lhs.getPrecision(), rhs.getPrecision()))
         
         if compare(lhs, to: rhs) == 0 { // N.B.: result == 0
             
@@ -191,6 +212,9 @@ struct BigFloat {
     
     /// This is the internal object that handles the actual interaction with GMP
     fileprivate var internalObject: _BigFloat
+ 
+    var precision: Int { return internalObject.getPrecision() }
+    static let defaultPrecision = 64
     
 }
 
@@ -198,36 +222,36 @@ struct BigFloat {
 // Initializers
 extension BigFloat{
     
-    init() {
+    init(withPrecision precision: Int = BigFloat.defaultPrecision) {
         
-        internalObject = _BigFloat()
+        internalObject = _BigFloat(withPrecision: precision)
         
     }
     
-    init(_ value: String) {
+    init(_ value: String, withPrecision precision: Int = BigFloat.defaultPrecision) {
         
-        self.init()
+        self.init(withPrecision: precision)
         internalObject.set(value)
         
     }
     
-    init(_ value: Double) {
+    init(_ value: Double, withPrecision precision: Int = BigFloat.defaultPrecision) {
         
-        self.init()
+        self.init(withPrecision: precision)
+        internalObject.set(value)
+        
+    }
+    
+    init<T>(_ value: T, withPrecision precision: Int = BigFloat.defaultPrecision) where T:SignedInteger {
+        
+        self.init(withPrecision: precision)
         internalObject.set(String(value))
         
     }
     
-    init<T>(_ value: T) where T:SignedInteger {
+    init<T>(_ value: T, withPrecision precision: Int = BigFloat.defaultPrecision) where T:UnsignedInteger {
         
-        self.init()
-        internalObject.set(String(value))
-        
-    }
-    
-    init<T>(_ value: T) where T:UnsignedInteger {
-        
-        self.init()
+        self.init(withPrecision: precision)
         internalObject.set(String(value))
         
     }
@@ -258,14 +282,34 @@ extension BigFloat: Equatable, Comparable {
 
 extension BigFloat: CustomStringConvertible {
     
+    func toString(usingBase base: Int=10, returningUpToThisManyDigits n: Int=20) -> String {
+        
+        return self.internalObject.getString(usingBase: base, returningUpToThisManyDigits: n)
+
+    }
+    
+    
     var description: String {
         
-        return self.internalObject.getString()
+        return toString()
         
     }
     
 }
 
+// Operations
+extension BigFloat {
+
+    static func * (_ rhs : BigFloat, _ lhs : BigFloat) -> BigFloat {
+        
+        let internalObject = _BigFloat.multiply(lhs.internalObject, rhs.internalObject)
+        
+        return BigFloat(internalObject)
+        
+    }
+
+    
+}
 
 extension Double {
     

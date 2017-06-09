@@ -286,9 +286,15 @@ extension BigInt: IntegerArithmetic {
 
 extension BigInt: CustomStringConvertible {
     
+    func toString(usingBase base: Int=10) -> String {
+        
+        return self.internalObject.getString(usingBase: base)
+
+    }
+    
     var description: String {
         
-        return self.internalObject.getString()
+        return toString()
         
     }
     

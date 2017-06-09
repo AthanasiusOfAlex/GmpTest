@@ -26,30 +26,12 @@
 
 func makeScope() {
 
-    let n = BigInt(234)
-    print(n)
     
-    let a = BigFloat("0.0323423")
-    let b = BigFloat("0.323423")
-    let c = BigFloat("3.23423")
-    let d = BigFloat("32.3423")
-    let e = BigFloat("323.423")
-    let f = BigFloat("3234.23")
-    let g = BigFloat("32342.3")
-    let h = BigFloat("323423")
-    let i = BigFloat("3234230")
-    let j = BigFloat("32342300")
-    
-    print(a)
-    print(b)
-    print(c)
-    print(d)
-    print(e)
-    print(f)
-    print(g)
-    print(h)
-    print(i)
-    print(j)
+    let aB = BigFloat("0.12345678910111213141516171819202122232425262728293031", withPrecision: 129000)
+    let aD = aB * aB * aB * aB
+
+    print(aB.toString(usingBase: 16, returningUpToThisManyDigits: 500))
+    print(aD.toString(usingBase: 16, returningUpToThisManyDigits: 500))
     
 }
 

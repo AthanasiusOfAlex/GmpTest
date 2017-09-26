@@ -303,11 +303,23 @@ extension BigFloat {
     static func * (_ rhs : BigFloat, _ lhs : BigFloat) -> BigFloat {
         
         let internalObject = _BigFloat.multiply(lhs.internalObject, rhs.internalObject)
-        
         return BigFloat(internalObject)
         
     }
-
+    
+    static func + (_ lhs: BigFloat, _ rhs: BigFloat) -> BigFloat {
+        
+        let internalObject = _BigFloat.add(lhs.internalObject, rhs.internalObject)
+        return BigFloat(internalObject)
+        
+    }
+    
+    static func - (_ lhs: BigFloat, _ rhs: BigFloat) -> BigFloat {
+        
+        let internalObject = _BigFloat.subtract(lhs.internalObject, rhs.internalObject)
+        return BigFloat(internalObject)
+        
+    }
     
 }
 
@@ -328,7 +340,6 @@ extension Double {
     }
     
 }
-
 
 
 //
